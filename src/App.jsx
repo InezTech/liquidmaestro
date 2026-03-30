@@ -881,33 +881,160 @@ function App() {
       <header>
         <a href="#/" className="logo" style={{ textDecoration: 'none' }}>Liquid Maestro</a>
         
-        {/* Mobile Toggle Button */}
-        <button 
-          className="mobile-menu-toggle" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsMobileMenuOpen(!isMobileMenuOpen);
-          }}
-          aria-label="Toggle Menu"
-        >
-          <div className={`burger ${isMobileMenuOpen ? 'open' : ''}`}></div>
-        </button>
-
-        <nav className={`nav-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-          <a href="#/" onClick={() => setIsMobileMenuOpen(false)}>Home</a>
-          <a href="#/menu" onClick={() => setIsMobileMenuOpen(false)}>Menu</a>
-          <a href="#/events" onClick={() => setIsMobileMenuOpen(false)}>Events</a>
-          <a href="#/blog" onClick={() => setIsMobileMenuOpen(false)}>Blog</a>
-          <a href="#/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+        {/* Desktop Nav */}
+        <nav className="nav-links desktop-nav">
+          <a href="#/">Home</a>
+          <a href="#/menu">Menu</a>
+          <a href="#/events">Events</a>
+          <a href="#/blog">Blog</a>
+          <a href="#/contact">Contact</a>
           <a 
             href="#/reservations" 
-            className="nav-reservation-btn resmio-button mobile-hidden"
+            className="nav-reservation-btn resmio-button"
             data-resmio-id="liquid-maestro"
           >
             <Calendar size={14} style={{ marginRight: '0.5rem' }} />
             Reservations
           </a>
         </nav>
+
+        {/* Mobile Burger Button */}
+        <button 
+          className="mobile-menu-toggle" 
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMobileMenuOpen(prev => !prev);
+          }}
+          aria-label="Toggle navigation menu"
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '12px',
+            zIndex: 3000,
+            position: 'relative',
+          }}
+        >
+          <div className={`burger ${isMobileMenuOpen ? 'open' : ''}`}></div>
+        </button>
+
+        {/* Mobile Full-Screen Overlay Nav — React controlled, always works */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ duration: 0.35, ease: [0.77, 0, 0.175, 1] }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100vh',
+                background: 'rgba(11, 11, 11, 0.98)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                zIndex: 2000,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2.5rem',
+              }}
+              className="mobile-nav-overlay"
+            >
+              {/* Close button inside overlay */}
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{
+                  position: 'absolute',
+                  top: '1.5rem',
+                  right: '1.5rem',
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 3001,
+                }}
+                aria-label="Close menu"
+              >
+                ×
+              </button>
+
+              {/* Mobile nav links */}
+              {[
+                { href: '#/', label: 'Home' },
+                { href: '#/menu', label: 'Menu' },
+                { href: '#/events', label: 'Events' },
+                { href: '#/blog', label: 'Blog' },
+                { href: '#/contact', label: 'Contact' },
+              ].map((link, i) => (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.07 + 0.1 }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  style={{
+                    color: '#fff',
+                    textDecoration: 'none',
+                    fontSize: '1.5rem',
+                    fontFamily: 'var(--font-heading)',
+                    letterSpacing: '4px',
+                    textTransform: 'uppercase',
+                    fontWeight: 400,
+                    padding: '0.5rem 2rem',
+                    transition: 'color 0.3s',
+                  }}
+                  onMouseEnter={e => e.target.style.color = 'var(--accent-color)'}
+                  onMouseLeave={e => e.target.style.color = '#fff'}
+                >
+                  {link.label}
+                </motion.a>
+              ))}
+
+              {/* Mobile Book a Table button */}
+              <motion.a
+                href="#/reservations"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="resmio-button"
+                data-resmio-id="liquid-maestro"
+                style={{
+                  marginTop: '1rem',
+                  padding: '1rem 2.5rem',
+                  border: '1.5px solid var(--accent-color)',
+                  color: 'var(--accent-color)',
+                  textDecoration: 'none',
+                  fontSize: '0.85rem',
+                  letterSpacing: '3px',
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                }}
+              >
+                <Calendar size={18} />
+                Book a Table
+              </motion.a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       <main style={{ minHeight: '80vh' }}>
