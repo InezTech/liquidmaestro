@@ -3,8 +3,38 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import { Calendar, ArrowRight, Clock, Wine, Send, Mail, MapPin, Phone } from 'lucide-react';
 import './index.css';
 
-const API_BASE = 'http://localhost:8000/api';
-const WS_BASE = 'ws://localhost:8000/api/ws';
+// Uses VITE_API_BASE env var in production (set on Netlify), falls back to localhost in dev
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000/api';
+const IS_PROD = Boolean(import.meta.env.VITE_API_BASE);
+const WS_PROTOCOL = IS_PROD ? (import.meta.env.VITE_API_BASE.replace('https', 'wss').replace('http', 'ws')) : 'ws://localhost:8000/api';
+const WS_BASE = `${WS_PROTOCOL}/ws`;
+
+// ─── Static Fallback Data (shown when backend is unreachable) ─────────────────
+const STATIC_MENU = [
+  { id: 1, category: 'Signature Cocktails', name: 'Obsidian Old Fashioned', price: '$24', description: 'Activated charcoal, barrel-aged bourbon, dark cherry essence, and a hand-carved crystal ice sphere.', is_seasonal: 0 },
+  { id: 2, category: 'Signature Cocktails', name: 'Midnight Gimlet', price: '$22', description: 'Botanical gin, fresh lime, nocturnal violet liqueur, and a whisper of elderflower.', is_seasonal: 1 },
+  { id: 3, category: 'Signature Cocktails', name: 'Symphony in Gold', price: '$26', description: 'A golden blend of premium aged rum, saffron-infused honey, and aromatic bitters.', is_seasonal: 0 },
+  { id: 4, category: 'Signature Cocktails', name: 'Velvet Underground', price: '$23', description: 'Aged mezcal, black cardamom, smoked rosemary, and a blood-orange reduction.', is_seasonal: 0 },
+  { id: 5, category: 'Timeless Classics', name: 'The Perfect Negroni', price: '$19', description: 'A flawless 1-1-1 balance of London dry gin, sweet vermouth, and Campari. Stirred to perfection.', is_seasonal: 0 },
+  { id: 6, category: 'Timeless Classics', name: 'Dry Martini', price: '$21', description: 'Bone-dry gin or vodka, a ghost of vermouth, and a hand-twisted citrus peel. No compromise.', is_seasonal: 0 },
+  { id: 7, category: 'Timeless Classics', name: 'Old Fashioned', price: '$20', description: 'Rye whisky, Demerara sugar, Angostura bitters, a large ice cube. The gold standard.', is_seasonal: 0 },
+  { id: 8, category: 'Spirits & Flights', name: 'Japanese Whisky Flight', price: '$48', description: 'A tasting of three exceptional Japanese single malts — Hibiki, Yamazaki 12, and Nikka From the Barrel.', is_seasonal: 0 },
+  { id: 9, category: 'Spirits & Flights', name: 'Mezcal Terroir', price: '$38', description: 'Three small-batch mezcals from distinct agave varietals, served with orange, sal de gusano, and chapulines.', is_seasonal: 0 },
+  { id: 10, category: 'Seasonal Specials', name: 'The Noir Series', price: '$28', description: 'Activated charcoal, dark aged rums, and striking black velvet finishes. Our signature seasonal expression.', is_seasonal: 1 },
+  { id: 11, category: 'Seasonal Specials', name: 'Crimson Velvet', price: '$25', description: 'Raspberry-washed cognac, champagne bitters, hibiscus orgeat, and a rose-water mist finish.', is_seasonal: 1 },
+];
+
+const STATIC_EVENTS = [
+  { id: 1, title: 'Vernissage: Industrial Noir', date: 'April 15th', description: 'An evening of monochromatic art installations, heavy bass, and limited-run cocktail expressions inspired by the works on display. Tickets available at the door.', category: 'Art & Music' },
+  { id: 2, title: 'The Maestro Session', date: 'Every Friday', description: 'Live improvisational jazz meets rare whiskey tastings. Our resident musicians and guest distillers converge for an unmissable mid-week ritual.', category: 'Live Sessions' },
+  { id: 3, title: 'Molecular Mixology Masterclass', date: 'May 3rd', description: 'Join our lead mixologist for an intimate workshop exploring spherification, liquid nitrogen, and the future of drink. Limited to 12 guests.', category: 'Workshop' },
+];
+
+const STATIC_BLOG = [
+  { id: 1, title: 'The Geometry of Ice', author: 'The Maestro', date: 'March 2026', excerpt: 'Understanding the physics of the perfect chill.', content: 'In the realm of high-end mixology, the clarity and shape of ice is not an afterthought — it is a fundamental ingredient.\n\nA perfectly clear, large-format cube melts at a fraction of the rate of crushed ice, maintaining dilution precisely where you want it. The geometry matters: a 2-inch sphere has minimal surface area relative to its volume, chilling your spirit slowly and deliberately.\n\nAt Liquid Maestro, we directionally freeze all our ice using custom insulated molds, eliminating the air bubbles and impurities that cause cloudiness. The result is ice that belongs in a cocktail the way marble belongs in a gallery.', category: 'Technique' },
+  { id: 2, title: 'Understanding Bitters', author: 'The Maestro', date: 'February 2026', excerpt: 'The invisible architecture of every great cocktail.', content: 'Bitters are the salt and pepper of the cocktail world — you rarely taste them directly, but you always notice their absence.\n\nOriginating as medicinal tinctures in the 19th century, bitters are concentrated botanical extracts: roots, barks, herbs, and citrus peels macerated in high-proof spirit.\n\nAt Liquid Maestro, we stock over 40 varieties — from the ubiquitous Angostura to our house-made activated charcoal bitters, which add a dark, smoky depth to our Obsidian Old Fashioned.\n\nThe next time you order a cocktail, ask for the same drink with and without bitters. The difference will permanently change how you think about mixology.', category: 'Education' },
+  { id: 3, title: 'The Rise of Japanese Whisky', author: 'The Maestro', date: 'January 2026', excerpt: 'How the East rewrote the rules of whisky.', content: 'When Masataka Taketsuru returned from Scotland in 1920 with his Scottish wife — and the secrets of Scotch whisky — he could not have known he was laying the groundwork for an industry that would eventually outscore Scottish expressions at blind tastings.\n\nJapanese whisky embraces a philosophy of balance, subtlety, and precision that mirrors the broader aesthetic of Japanese craftsmanship. Where Scotch confronts you, Japanese whisky invites you.\n\nOur Japanese Whisky Flight features three expressions — Hibiki Harmony, Yamazaki 12, and Nikka From the Barrel — chosen to take you on a journey from delicate floral notes to rich, complex depth.', category: 'Culture' },
+];
 
 const fadeUpText = {
   hidden: { opacity: 0, y: 50, skewY: 2 },
@@ -339,11 +369,13 @@ function MenuPage() {
     fetch(`${API_BASE}/menu`)
       .then(res => res.json())
       .then(data => {
-        setMenuItems(Array.isArray(data) ? data : []);
+        const items = Array.isArray(data) && data.length > 0 ? data : STATIC_MENU;
+        setMenuItems(items);
         setLoading(false);
       })
-      .catch(err => {
-        console.error('Error fetching menu:', err);
+      .catch(() => {
+        // API unreachable (e.g. Netlify static deploy) — use static data
+        setMenuItems(STATIC_MENU);
         setLoading(false);
       });
   };
@@ -352,17 +384,17 @@ function MenuPage() {
     window.scrollTo(0, 0);
     fetchMenu();
 
-    const ws = new WebSocket(WS_BASE);
-    ws.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
-        if (payload.event === 'menu_updated') {
-          fetchMenu();
-        }
-      } catch(e) {}
-    };
-
-    return () => { if (ws) ws.close(); };
+    // Only open WebSocket in local dev (when backend is actually running)
+    if (!IS_PROD) {
+      const ws = new WebSocket(WS_BASE);
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.event === 'menu_updated') fetchMenu();
+        } catch(e) {}
+      };
+      return () => ws.close();
+    }
   }, []);
 
   const predefinedOrder = ["Signature Cocktails", "Timeless Classics", "Spirits & Flights", "Seasonal Specials"];
@@ -448,16 +480,25 @@ function EventsPage() {
   const fetchEvents = () => {
     fetch(`${API_BASE}/events`)
       .then(res => res.json())
-      .then(data => { setEvents(data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(data => {
+        const items = Array.isArray(data) && data.length > 0 ? data : STATIC_EVENTS;
+        setEvents(items);
+        setLoading(false);
+      })
+      .catch(() => {
+        setEvents(STATIC_EVENTS);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchEvents();
-    const ws = new WebSocket(WS_BASE);
-    ws.onmessage = (e) => { if (JSON.parse(e.data).event === 'events_updated') fetchEvents(); };
-    return () => ws.close();
+    if (!IS_PROD) {
+      const ws = new WebSocket(WS_BASE);
+      ws.onmessage = (e) => { try { if (JSON.parse(e.data).event === 'events_updated') fetchEvents(); } catch(err) {} };
+      return () => ws.close();
+    }
   }, []);
 
   return (
@@ -508,16 +549,25 @@ function BlogPage() {
   const fetchBlog = () => {
     fetch(`${API_BASE}/blog`)
       .then(res => res.json())
-      .then(data => { setPosts(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(data => {
+        const items = Array.isArray(data) && data.length > 0 ? data : STATIC_BLOG;
+        setPosts(items);
+        setLoading(false);
+      })
+      .catch(() => {
+        setPosts(STATIC_BLOG);
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchBlog();
-    const ws = new WebSocket(WS_BASE);
-    ws.onmessage = (e) => { if (JSON.parse(e.data).event === 'blog_updated') fetchBlog(); };
-    return () => ws.close();
+    if (!IS_PROD) {
+      const ws = new WebSocket(WS_BASE);
+      ws.onmessage = (e) => { try { if (JSON.parse(e.data).event === 'blog_updated') fetchBlog(); } catch(err) {} };
+      return () => ws.close();
+    }
   }, []);
 
   return (
@@ -945,8 +995,6 @@ function App() {
           <div className="footer-bottom-links">
             <a href="#/privacy">Privacy Policy</a>
             <a href="#/terms">Terms of Service</a>
-            {/* Admin entry point hidden in production context */}
-            <a href="http://localhost:5174" className="admin-link">Staff Portal</a>
           </div>
           <div>
             &copy; 2026 Liquid Maestro. All rights reserved.
